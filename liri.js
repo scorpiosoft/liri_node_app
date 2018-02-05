@@ -43,10 +43,7 @@ switch (command)
     spotify_this_song(title);
     break;
   case 'movie-this':
-    // assemble the movie name, OMDB needs the '+'es between words
-    var movie_title = args.slice(1).join('+');
-    console.log('movie_title:', movie_title);
-    movie_this(movie_title);
+    movie_this(title);
     break;
   case 'do-what-it-says':
     fs.readFile(dwis_file, "utf8", function(error, data)
@@ -54,14 +51,15 @@ switch (command)
       // log any errors
       if (error)
         return console.log(error);
-      console.log(data);
+      // console.log(data);
       // parse the command read from the file
       var dwis_arr = data.split(/, */);
-      console.log('dwis_arr:', dwis_arr);
+      // console.log('dwis_arr:', dwis_arr);
       var dwis_command = dwis_arr[0];
       var dwis_title = dwis_arr[1];
+      // remove all quotes and newlines in the title
       dwis_title = dwis_title.replace(/["'\n]/g, '');
-      console.log('dwis_command:', dwis_command, 'dwis_title:', dwis_title);
+      // console.log('dwis_command:', dwis_command, 'dwis_title:', dwis_title);
 
       switch(dwis_command)
       {
@@ -69,13 +67,10 @@ switch (command)
           spotify_this_song(dwis_title);
           break;
         case 'movie-this':
-          // assemble the movie name, OMDB needs the '+'es between words
-          var movie_title = dwis_title.split(' ').join('+');
-          console.log('movie_title:', movie_title);
-          movie_this(movie_title);
+          movie_this(dwis_title);
           break;
         default:
-          console.log("unknown operation:", op);
+          console.log("Unknown command:", dwis_command);
           return false;
       }
     });
@@ -95,7 +90,6 @@ switch (command)
 // * The song's name
 // * A preview link of the song from Spotify
 // * The album that the song is from
-//
 // If no song is provided then default to "The No-No Song" by Ringo Starr
 function spotify_this_song(song)
 {
@@ -134,6 +128,16 @@ function spotify_this_song(song)
   });
 }
 
+// function movie_this
+// log to terminal the following info about the passed in movie
+// * Title of the movie
+// * Year the movie came out
+// * IMDB Rating of the movie
+// * Rotten Tomatoes Rating of the movie
+// * Country where the movie was produced
+// * Language of the movie
+// * Plot of the movie
+// * Actors in the movie
 // If no movie is provided then default to "Highlander"
 function movie_this(movie)
 {
@@ -141,7 +145,7 @@ function movie_this(movie)
   if (!validate_exists(title)) { title = 'Highlander'; }
 
   // Then run a request to the OMDB API with the movie specified
-  var query = "http://www.omdbapi.com/?t=" + title + "&y=&plot=short&apikey=df7ba434";
+  var query = "http://www.omdbapi.com/?t=" + title.split(' ').join('+') + "&y=&plot=short&apikey=df7ba434";
   // console.log(query);
   // do the request
   request(query, function(error, response, body)
@@ -149,8 +153,32 @@ function movie_this(movie)
     // If the request is successful (i.e. if the response status code is 200)
     if (!error && response.statusCode === 200)
     {
-      console.log(JSON.parse(body, null, 2));
-      console.log(args.slice(2).join(' '), "was released", JSON.parse(body).Released);
+      var obj = JSON.parse(body);
+      // DEBUG
+      // console.log(JSON.parse(body, null, 2));
+      // Actual Output
+      console.log('Movie:', title);
+      console.log('\tReleased:\t', obj.Released);
+      var imbd_rating = '';
+      var rt_rating = '';
+      for (var i = 0; i < obj.Ratings.length; ++i)
+      {
+        switch (obj.Ratings[i].Source)
+        {
+          case 'Internet Movie Database':
+            imdb_rating = obj.Ratings[i].Value;
+            break;
+          case 'Rotten Tomatoes':
+            rt_rating = obj.Ratings[i].Value;
+            break;
+        }
+      }
+      console.log('\tIMDB Rating:\t', imdb_rating);
+      console.log('\tRotten Tomatoes:', rt_rating);
+      console.log('\tCountry:\t', obj.Country);
+      console.log('\tLanguage:\t', obj.Language);
+      console.log('\tPlot:\t\t', obj.Plot);
+      console.log('\tActors: \t', obj.Actors);
     }
   });
 }
