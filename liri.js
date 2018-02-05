@@ -7,17 +7,24 @@
 //
 // External Dependencies
 //
-require("dotenv").config();
-var keys = require("./keys.js");
-var Spotify = require('node-spotify-api');
-var request = require('request');
 
-// store objects from keys.js in variables
-var spotify = new Spotify(keys.spotify);
+// load .env file into provess.env object
+require("dotenv").config();
+// objects for API use
+var keys = require("./keys.js");
+// spotify API
+var Spotify = require('node-spotify-api');
+// XHR API
+var request = require('request');
+// file system package
+var fs = require("fs");
 
 //
 // Mainline Code
 //
+
+// store objects from keys.js in variables
+var spotify = new Spotify(keys.spotify);
 
 // command line arg processing
 var args = process.argv.slice(2);
@@ -25,6 +32,9 @@ var command = args[0];
 // assemble the movie name, OMDB needs the '+'es between words
 var title = args.slice(1).join(' ');
 // console.log('command:', command, 'title:', title);
+
+// stuff for 'do-what-it-says'
+var dwis_file = 'random.txt'
 
 spotify_this_song(args[0]);
 switch (command)
@@ -39,6 +49,36 @@ switch (command)
     movie_this(movie_title);
     break;
   case 'do-what-it-says':
+    fs.readFile(dwis_file, "utf8", function(error, data)
+    {
+      // log any errors
+      if (error)
+        return console.log(error);
+      console.log(data);
+      // parse the command read from the file
+      var dwis_arr = data.split(/, */);
+      console.log('dwis_arr:', dwis_arr);
+      var dwis_command = dwis_arr[0];
+      var dwis_title = dwis_arr[1];
+      dwis_title = dwis_title.replace(/["'\n]/g, '');
+      console.log('dwis_command:', dwis_command, 'dwis_title:', dwis_title);
+
+      switch(dwis_command)
+      {
+        case 'spotify-this-song':
+          spotify_this_song(dwis_title);
+          break;
+        case 'movie-this':
+          // assemble the movie name, OMDB needs the '+'es between words
+          var movie_title = dwis_title.split(' ').join('+');
+          console.log('movie_title:', movie_title);
+          movie_this(movie_title);
+          break;
+        default:
+          console.log("unknown operation:", op);
+          return false;
+      }
+    });
     break;
   default:
     console.log('Unknown command:', command);
@@ -60,21 +100,21 @@ switch (command)
 function spotify_this_song(song)
 {
   var i, j;
-  var song = song;
-  if (!validate_exists(song)) { song = 'No No Song'; }
+  var title = song;
+  if (!validate_exists(title)) { title = 'No No Song'; }
 
   // search spotify for the song - the results are really off base, gotta leave the limit high to be reasonably sure of getting your song
-  spotify.search({ type: 'track', query: song, limit: 20 })
+  spotify.search({ type: 'track', query: title, limit: 20 })
   .then(function(response) {
     for (i = 0; i < response.tracks.items.length; ++i)
     {
-      if (response.tracks.items[i].name === song)
+      if (response.tracks.items[i].name === title)
       {
         // DEBUG
         // console.log(i, "artists:", response.tracks.items[i].artists);
         // console.log(i, "name:", response.tracks.items[i].name);
         // Actual Output
-        console.log("Track:", song);
+        console.log("Track:", title);
         var artists = "";
         for (j = 0; j < response.tracks.items[i].artists.length; ++j)
         {
@@ -97,12 +137,14 @@ function spotify_this_song(song)
 // If no movie is provided then default to "Highlander"
 function movie_this(movie)
 {
+  var title = movie;
+  if (!validate_exists(title)) { title = 'Highlander'; }
+
   // Then run a request to the OMDB API with the movie specified
-  var queryUrl = "http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&apikey=df7ba434";
-  // This line is just to help us debug against the actual URL.
-  // console.log(queryUrl);
-  // Then create a request to the queryUrl
-  request(queryUrl, function(error, response, body)
+  var query = "http://www.omdbapi.com/?t=" + title + "&y=&plot=short&apikey=df7ba434";
+  // console.log(query);
+  // do the request
+  request(query, function(error, response, body)
   {
     // If the request is successful (i.e. if the response status code is 200)
     if (!error && response.statusCode === 200)
