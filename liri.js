@@ -4,6 +4,13 @@
 // * `do-what-it-says`
 // * `geocode`
 
+// NOTE TO TRILOGY: I am a conscientious objector to social media.  I will not use personal assets to access social media.
+//                  I have never had a Twiter account and I abandoned my Facebook account many years ago.
+//                  I will not open even a fake Twitter account for a homework assignmnet.
+//                  If this were an employer assigned task using employer owned assets I would have no problem complying.
+//
+//                  As such, I added 'geocode' as an alternate 4th command for LIRI.
+
 //
 // External Dependencies
 //
@@ -18,6 +25,8 @@ var Spotify = require('node-spotify-api');
 var request = require('request');
 // file system package
 var fs = require("fs");
+// geocoder API
+var geocoder = require("geocoder");
 
 //
 // Mainline Code
@@ -44,6 +53,9 @@ switch (command)
     break;
   case 'movie-this':
     movie_this(title);
+    break;
+  case 'geocode':
+    do_geocode(title);
     break;
   case 'do-what-it-says':
     fs.readFile(dwis_file, "utf8", function(error, data)
@@ -180,6 +192,34 @@ function movie_this(movie)
       console.log('\tPlot:\t\t', obj.Plot);
       console.log('\tActors: \t', obj.Actors);
     }
+  });
+}
+
+// function geocode
+// log to terminal the following info about the passed in location
+// * formatted address
+// * latitude
+// * longitude
+// If no movie is provided then default to "Brandenburg Gate"
+function do_geocode(location)
+{
+  var loc = location;
+  if (!validate_exists(loc)) { loc = 'Brandenburg Gate'; }
+
+  geocoder.geocode(loc, function ( err, data )
+  {
+    // If there is an error log it.
+    if (err)
+    {
+      console.log(err);
+    }
+    // DEBUG
+    // console.log(JSON.stringify(data, null, 2));
+    // Actual Output
+    console.log('Location:', loc);
+    console.log('\tAddress:   ', data.results[0].formatted_address);
+    console.log('\tLatitude:  ', data.results[0].geometry.location.lat);
+    console.log('\tLongitude: ', data.results[0].geometry.location.lng);
   });
 }
 

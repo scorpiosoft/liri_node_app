@@ -4,3 +4,4 @@ node_modules/
 .env
 spotify_response.js
 omdb_response.js
+geocode_response.js

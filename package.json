@@ -19,6 +19,7 @@
   "homepage": "https://github.com/scorpiosoft/liri_node_app#readme",
   "dependencies": {
     "dotenv": "^5.0.0",
+    "geocoder": "^0.2.3",
     "node-spotify-api": "^1.0.7",
     "request": "^2.83.0"
   }
