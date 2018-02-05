@@ -4,6 +4,9 @@
 // * `do-what-it-says`
 // * `geocode`
 
+//
+// External Dependencies
+//
 require("dotenv").config();
 var keys = require("./keys.js");
 var Spotify = require('node-spotify-api');
@@ -12,8 +15,35 @@ var request = require('request');
 // store objects from keys.js in variables
 var spotify = new Spotify(keys.spotify);
 
-// command line arguments
+//
+// Mainline Code
+//
+
+// command line arg processing
 var args = process.argv.slice(2);
+var command = args[0];
+// assemble the movie name, OMDB needs the '+'es between words
+var title = args.slice(1).join(' ');
+// console.log('command:', command, 'title:', title);
+
+spotify_this_song(args[0]);
+switch (command)
+{
+  case 'spotify-this-song':
+    spotify_this_song(title);
+    break;
+  case 'movie-this':
+    // assemble the movie name, OMDB needs the '+'es between words
+    var movie_title = args.slice(1).join('+');
+    console.log('movie_title:', movie_title);
+    movie_this(movie_title);
+    break;
+  case 'do-what-it-says':
+    break;
+  default:
+    console.log('Unknown command:', command);
+    return false;
+}
 
 //
 // LIRI functions
@@ -64,7 +94,24 @@ function spotify_this_song(song)
   });
 }
 
-spotify_this_song(args[0]);
+// If no movie is provided then default to "Highlander"
+function movie_this(movie)
+{
+  // Then run a request to the OMDB API with the movie specified
+  var queryUrl = "http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&apikey=df7ba434";
+  // This line is just to help us debug against the actual URL.
+  // console.log(queryUrl);
+  // Then create a request to the queryUrl
+  request(queryUrl, function(error, response, body)
+  {
+    // If the request is successful (i.e. if the response status code is 200)
+    if (!error && response.statusCode === 200)
+    {
+      console.log(JSON.parse(body, null, 2));
+      console.log(args.slice(2).join(' '), "was released", JSON.parse(body).Released);
+    }
+  });
+}
 
 //
 // Utility Functions
