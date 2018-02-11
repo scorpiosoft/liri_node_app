@@ -24,7 +24,8 @@ Node APIs:
 
 ### Running
 
-1. `node liri.js <command> [title/location]`
+1. You will need a .env file containing your SPOTIFY_ID and SPOTIFY_SECRET values.
+2. `node liri.js <command> [title/location]`
 
 ### Commands Recognized
 
