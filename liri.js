@@ -38,14 +38,13 @@ var spotify = new Spotify(keys.spotify);
 // command line arg processing
 var args = process.argv.slice(2);
 var command = args[0];
-// assemble the movie name, OMDB needs the '+'es between words
+// assemble the title (or location)
 var title = args.slice(1).join(' ');
 // console.log('command:', command, 'title:', title);
 
 // stuff for 'do-what-it-says'
 var dwis_file = 'random.txt'
 
-spotify_this_song(args[0]);
 switch (command)
 {
   case 'spotify-this-song':
@@ -81,6 +80,9 @@ switch (command)
         case 'movie-this':
           movie_this(dwis_title);
           break;
+        case 'geocode':
+          do_geocode(dwis_title);
+          break;
         default:
           console.log("Unknown command:", dwis_command);
           return false;
@@ -108,6 +110,7 @@ function spotify_this_song(song)
   var i, j;
   var title = song;
   if (!validate_exists(title)) { title = 'No No Song'; }
+  // console.log('title:', title);
 
   // search spotify for the song - the results are really off base, gotta leave the limit high to be reasonably sure of getting your song
   spotify.search({ type: 'track', query: title, limit: 20 })
