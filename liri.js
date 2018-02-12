@@ -108,6 +108,7 @@ switch (command)
 function spotify_this_song(song)
 {
   var i, j;
+  var found = false;
   var title = song;
   if (!validate_exists(title)) { title = 'No No Song'; }
   // console.log('title:', title);
@@ -119,6 +120,7 @@ function spotify_this_song(song)
     {
       if (response.tracks.items[i].name === title)
       {
+        found = true;
         // DEBUG
         // console.log(i, "artists:", response.tracks.items[i].artists);
         // console.log(i, "name:", response.tracks.items[i].name);
@@ -136,6 +138,8 @@ function spotify_this_song(song)
         console.log('');
       }
     }
+    if (!found)
+      console.log('Could not find your song.');
     // console.log(JSON.stringify(response, null, 2));
   })
   .catch(function(err) {
